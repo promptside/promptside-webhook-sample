@@ -1,0 +1,37 @@
+version: '3.6'
+
+services:
+  app:
+    build:
+      context: .
+      target: base
+    restart: on-failure
+    volumes:
+      - ./:/srv/app:cached
+    working_dir: /srv/app
+    command: bash
+    tty: true
+    user: node
+    ports:
+      - "8080:8080"
+      - "9229:9229"
+
+handlers:
+  build:
+    - command: gulp
+  sync:
+    - command: npm install
+    - handler: build
+  watch:
+    - handler: build
+      args:
+        - watch
+  init:
+    - command: rm -Rf node_modules
+    - command: npm install
+    - handler: build
+      args:
+        - clean
+    - handler: build
+  serve:
+    - command: node --inspect=0.0.0.0:9229 dist/main.js
